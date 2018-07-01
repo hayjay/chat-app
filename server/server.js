@@ -32,21 +32,25 @@ io.on('connection', (socket) => {
 		console.log('Create email ', newEmail);
 	});
 	socket.on('createMessage', (newMessage) => {
-		console.log('New message '+ newMessage);
+		console.log('New Message', newMessage);
+
+		//io.emit emits the message or event to every connected user on the app
+		// io.emit('newMessage', {
+		// 	from : newMessage.from,
+		// 	text : newMessage.text,	
+		// 	createdAt : now.getTime()
+		// });
+
+		socket.broadcast.emit('newMessage', { //socket.broadcast will emit a message to all the connected user apart from myself
+			from : newMessage.from,
+			text : newMessage.text,
+			createdAt : now.getTime()
+		});
 	});
 	//listen for a disconnecting client when dey leave
 	socket.on('disconnect', () => {
 		console.log('Client from the browser has been disconnected!');
 	})
-
-	//CHAT APPLICATION CODE BEGINS
-	socket.emit('newMessage', { //as soon as the user get connected to the server, we gonna emit that event
-		from : 'Olawale',
-		text : 'Good morning everyone',
-		createdAt : now
-	});
-
-
 
 });
 
