@@ -14,25 +14,30 @@ var server = http.createServer(app);
 //how to communicate between outr server and client
 var io = socketIO(server);
 
-const now = new Date();
 //when a new user is connected, we alert that new user has been connected!
 io.on('connection', (socket) => { 
 	console.log('New user connected!');
 
+	socket.emit('newMessage', {
+		from : 'Admin',
+		text : 'Welcome to the chat app'
+	});
+
+	//socket.broadcast.emit from Admin text new user joined
+	socket.broadcast.emit('newMessage', { //message all group members when a new user joins apart frm d user that just joined
+		from : 'Admin',
+		text : 'New user joined',
+		createdAt : new Date().getTime()
+	});
+
 	//here is d body of d connection within d socket just wrapp all other socket function inside here
 
 	//just like creating newly defined function name and using emit function to send data back to the client(browser)
-	socket.emit('newEmail', { //emitting data with our event or send new email as a sharp endpoint to the client
-		from: 'Mike@example.com',
-		text: 'Hey whats going on ?',
-		createdAt: 123
-	});
-
-	socket.on('createEmail', (newEmail) => {
+ 	socket.on('createEmail', (newEmail) => {
 		console.log('Create email ', newEmail);
 	});
-	socket.on('createMessage', (newMessage) => {
-		console.log('New Message', newMessage);
+	socket.on('createMessage', (message) => {
+		console.log('New Message', message);
 
 		//io.emit emits the message or event to every connected user on the app
 		// io.emit('newMessage', {
@@ -41,11 +46,11 @@ io.on('connection', (socket) => {
 		// 	createdAt : now.getTime()
 		// });
 
-		socket.broadcast.emit('newMessage', { //socket.broadcast will emit a message to all the connected user apart from myself
-			from : newMessage.from,
-			text : newMessage.text,
-			createdAt : now.getTime()
-		});
+		// socket.broadcast.emit('newMessage', { //socket.broadcast will emit a message to all the connected user apart from myself
+		// 	from : message.from,
+		// 	text : message.text,
+		// 	createdAt : now.getTime()
+		// });
 	});
 	//listen for a disconnecting client when dey leave
 	socket.on('disconnect', () => {
