@@ -13,22 +13,17 @@ var app = express();
 var server = http.createServer(app);
 //how to communicate between outr server and client
 var io = socketIO(server);
-
+const {generateMessage} = require('./utils/message.js');
 //when a new user is connected, we alert that new user has been connected!
 io.on('connection', (socket) => { 
 	console.log('New user connected!');
 
-	socket.emit('newMessage', {
-		from : 'Admin',
-		text : 'Welcome to the chat app'
-	});
+	socket.emit('newMessage', generateMessage('Olawale Ajala', 'Welcome to the chat app'));
 
 	//socket.broadcast.emit from Admin text new user joined
-	socket.broadcast.emit('newMessage', { //message all group members when a new user joins apart frm d user that just joined
-		from : 'Admin',
-		text : 'New user joined',
-		createdAt : new Date().getTime()
-	});
+	//message all group members when a new user joins apart frm d user that just joined
+
+	socket.broadcast.emit('newMessage', generateMessage('Ajayi Nurudeen', 'New User Joined'));
 
 	//here is d body of d connection within d socket just wrapp all other socket function inside here
 
@@ -38,13 +33,8 @@ io.on('connection', (socket) => {
 	});
 	socket.on('createMessage', (message) => {
 		console.log('New Message', message);
-
-		//io.emit emits the message or event to every connected user on the app
-		// io.emit('newMessage', {
-		// 	from : newMessage.from,
-		// 	text : newMessage.text,	
-		// 	createdAt : now.getTime()
-		// });
+		// io.emit emits the message or event to every connected user on the app
+		io.emit('newMessage',generateMessage(message.from, message.text));
 
 		// socket.broadcast.emit('newMessage', { //socket.broadcast will emit a message to all the connected user apart from myself
 		// 	from : message.from,
