@@ -52,17 +52,17 @@ locationButton.on('click', function () {
 		 return alert('Geolocation not supported by ur browser!');
 	}
 
-	locationButton.attr('disabled', 'disabled');
+	locationButton.attr('disabled', 'disabled').text('Sending location...');
 	$(".loader").show();
 	navigator.geolocation.getCurrentPosition(function (position) {//gets the users browser position or location
-		locationButton.removeAttr('disabled'); //remove the locked button when the user already accepted/allowed the access
+		locationButton.removeAttr('disabled').text('Send location'); //remove the locked button when the user already accepted/allowed the access
 		$(".loader").hide();
 		socket.emit('createLocationMessage', {
 			latitude : position.coords.latitude,
 			longitude : position.coords.longitude
 		});
 	}, function (){
-		locationButton.removeAttr('disabled'); //remove the locked button when the user already accepted/allowed the access
+		locationButton.removeAttr('disabled').text('Send location'); //remove the locked button when the user already accepted/allowed the access
 		$(".loader").hide();
 		alert('Unable to fetch location because u denied access');
 	});
