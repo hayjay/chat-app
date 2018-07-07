@@ -8,6 +8,9 @@ socket.on('disconnect', function () {
   console.log('Disconnected from server');
 });
 
+//hide loader of the page by default
+$(".loader").hide();
+
 socket.on('newMessage', function (message) {
   console.log('newMessage', message);
   var li = jQuery('<li></li>');
@@ -31,11 +34,13 @@ socket.on('newLocationMessage', function(message){
 jQuery('#message-form').on('submit', function (e) { //pass arg e to prevent defualt page refresh
 	e.preventDefault(); //stops the browser from reloading when the form is submitted
 
+	var messageTextBox = jQuery('[name=message]');
 	socket.emit('createMessage', {
 		from : 'User',
-		text : jQuery('[name=message]').val()
+		text : messageTextBox.val()
 	}, function () {
-		//callback function in order to fulfill the acknowledgement
+		//callback function in order to fulfill the acknowledgement that is when the message has been delivered
+		messageTextBox.val('');
 	});
 });
 
@@ -47,13 +52,18 @@ locationButton.on('click', function () {
 		 return alert('Geolocation not supported by ur browser!');
 	}
 
+	locationButton.attr('disabled', 'disabled');
+	$(".loader").show();
 	navigator.geolocation.getCurrentPosition(function (position) {//gets the users browser position or location
-		console.log(position);
+		locationButton.removeAttr('disabled'); //remove the locked button when the user already accepted/allowed the access
+		$(".loader").hide();
 		socket.emit('createLocationMessage', {
 			latitude : position.coords.latitude,
 			longitude : position.coords.longitude
 		});
 	}, function (){
+		locationButton.removeAttr('disabled'); //remove the locked button when the user already accepted/allowed the access
+		$(".loader").hide();
 		alert('Unable to fetch location because u denied access');
 	});
 });
