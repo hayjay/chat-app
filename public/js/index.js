@@ -12,9 +12,10 @@ socket.on('disconnect', function () {
 $(".loader").hide();
 
 socket.on('newMessage', function (message) {
+	var formattedTime = moment(message.createdAt).format('h:mm a');
   console.log('newMessage', message);
   var li = jQuery('<li></li>');
-  li.text(`${message.from} : ${message.text}`);
+  li.text(`${message.from} ${formattedTime}: ${message.text}`);
 
   //append every new message to the li
   jQuery('#messages').append(li);
@@ -23,10 +24,10 @@ socket.on('newMessage', function (message) {
 socket.on('newLocationMessage', function(message){
 	var li = jQuery('<li></li>');
 	var a = jQuery('<a target ="_blank">My Current Location</a>');
-
+	var formattedTime = moment(message.createdAt).format('h:mm a')
 	li.text(`${message.from} : `);
 	a.attr('href', message.url); //sets the attribute of the a tag to b the url from the server
-	li.append(a); //append the generated anchor tag to the list or li tag where li now holds the value of anchor tage
+	li.append(a, ` at ${formattedTime}`); //append the generated anchor tag to the list or li tag where li now holds the value of anchor tage
 
 	jQuery("#messages").append(li); //append li tag to the end of the list
 });
