@@ -1,59 +1,85 @@
 const path = require('path');
 const http = require('http');
+const express = require('express');
 const socketIO = require('socket.io');
 
-//load express library
-const express = require('express');
-
+const {generateMessage} = require('./utils/message');
 const publicPath = path.join(__dirname, '../public');
-const port = process.env.PORT || 3000; 
-//console.log(__dirname + '/../public'); //__dirname tels us which directory we are!
-//make app variable to configure our express application
+const port = process.env.PORT || 3000;
 var app = express();
 var server = http.createServer(app);
-//how to communicate between outr server and client
 var io = socketIO(server);
-const {generateMessage} = require('./utils/message.js');
-//when a new user is connected, we alert that new user has been connected!
-io.on('connection', (socket) => { 
-	console.log('New user connected!');
 
-	socket.emit('newMessage', generateMessage('Olawale Ajala', 'Welcome to the chat app'));
+app.use(express.static(publicPath));
 
-	//socket.broadcast.emit from Admin text new user joined
-	//message all group members when a new user joins apart frm d user that just joined
+io.on('connection', (socket) => {
+  console.log('New user connected');
 
-	socket.broadcast.emit('newMessage', generateMessage('Ajayi Nurudeen', 'New User Joined'));
+  socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
 
-	//here is d body of d connection within d socket just wrapp all other socket function inside here
+  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
 
-	//just like creating newly defined function name and using emit function to send data back to the client(browser)
- 	socket.on('createEmail', (newEmail) => {
-		console.log('Create email ', newEmail);
-	});
-	socket.on('createMessage', (message) => {
-		console.log('New Message', message);
-		// io.emit emits the message or event to every connected user on the app
-		io.emit('newMessage',generateMessage(message.from, message.text));
+  socket.on('createMessage', (message, callback) => {
+    console.log('createMessage', message);
+    io.emit('newMessage', generateMessage(message.from, message.text));
+    callback('This is from the server.');
+    // socket.broadcast.emit('newMessage', {
+    //   from: message.from,
+    //   text: message.text,
+    //   createdAt: new Date().getTime()
+    // });
+  });
 
-		// socket.broadcast.emit('newMessage', { //socket.broadcast will emit a message to all the connected user apart from myself
-		// 	from : message.from,
-		// 	text : message.text,
-		// 	createdAt : now.getTime()
-		// });
-	});
-	//listen for a disconnecting client when dey leave
-	socket.on('disconnect', () => {
-		console.log('Client from the browser has been disconnected!');
-	})
-
+  socket.on('disconnect', () => {
+    console.log('User was disconnected');
+  });
 });
-
-
-
-//configuring our express static middleware using app.use()
-app.use(express.static(publicPath)); //indirectly making our application homepage to go to the public directory and load data
 
 server.listen(port, () => {
-	console.log(`server running on port ${port}`);
+  console.log(`Server is up on ${port}`);
 });
+
+
+
+
+
+// const path = require('path');
+// const http = require('http');
+// const express = require('express');
+// const socketIO = require('socket.io');
+
+// const {generateMessage} = require('./utils/message');
+// const publicPath = path.join(__dirname, '../public');
+// const port = process.env.PORT || 3000;
+// var app = express();
+// var server = http.createServer(app);
+// var io = socketIO(server);
+
+// app.use(express.static(publicPath));
+
+// io.on('connection', (socket) => {
+//   console.log('New user connected');
+
+//   socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
+
+//   socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
+
+//   socket.on('createMessage', (message, callback) => {
+//     console.log('createMessage', message);
+//     io.emit('newMessage', generateMessage(message.from, message.text));
+//     callback('This is from the server.');
+//     // socket.broadcast.emit('newMessage', {
+//     //   from: message.from,
+//     //   text: message.text,
+//     //   createdAt: new Date().getTime()
+//     // });
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log('User was disconnected');
+//   });
+// });
+
+// server.listen(port, () => {
+//   console.log(`Server is up on ${port}`);
+// });
