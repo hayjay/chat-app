@@ -1,5 +1,27 @@
 var socket = io();
 
+function scrollToBottom () {
+	//selectors
+	var messages = jQuery("#messages"); //select element with the id of messages
+	//determine the last message of the chat
+	var newMessage = messages.children('li:last-child');
+	// calculation to figure out if the scroll top + clientheight is greater than or equal to the client height
+	//heights
+	var clientHeight = messages.prop('clientHeight');
+	var scrollTop = messages.prop('scrollTop');
+	var scrollHeight = messages.prop('scrollHeight');
+
+	//get the height of the newly added message takin into consideration the padding weve applied to the li/ new  message css
+	var newMessageHeight = newMessage.innerHeight();
+	//get the message before the last message
+	var lastMessageHeight = newMessage.prev().innerHeight(); //goes and pick the last children before the current children (ne wmessage)
+
+
+	if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+		messages.scrollTop(scrollHeight);
+	}
+}
+
 socket.on('connect', function () {
   console.log('Connected to server');
 });
@@ -20,7 +42,10 @@ socket.on('newMessage', function (message) {
 		createdAt : formattedTime
 	});
 
-	jQuery("#messages").append(html);		
+	jQuery("#messages").append(html);
+
+	//automatically scroll the page to the bottom when a user adds a new message 
+	scrollToBottom();		
 });
 
 socket.on('newLocationMessage', function(message){
@@ -34,6 +59,9 @@ socket.on('newLocationMessage', function(message){
 	});
 	console.log(html);
 	jQuery("#messages").append(html);
+
+	//scroll page to bottom whenever der is a new location added
+	scrollToBottom();		
 });
 
 jQuery('#message-form').on('submit', function (e) { //pass arg e to prevent defualt page refresh
