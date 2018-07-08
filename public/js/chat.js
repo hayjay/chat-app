@@ -23,11 +23,38 @@ function scrollToBottom () {
 }
 
 socket.on('connect', function () {
+	//when a new user connects, collect the name of the user and name of d room he wants to join using jQuery.params()
+
+	//jQuery.deparams converts string to an object 
+	var params = jQuery.deparam(window.location.search); //windows.location.search collects the get request of d user data sent to the browsers address bar
+
+	socket.emit('join', params, function(err){ //as callback to server.js here, err: serve as the first parameter to server.js
+		if (err) {
+			alert(err);
+			window.location.href = '/';
+		}else{
+			console.log('No error');
+			//if there is no error while user is trying to join room
+		}
+	}); //
   console.log('Connected to server');
 });
 
+//when a user disconnect from the chat app, we wana let the other members of the room he was know he left and update the rememning number of users in the room
 socket.on('disconnect', function () {
-  console.log('Disconnected from server');
+	console.log('disconnected')
+});
+
+socket.on('updateUserList', function(users) {
+	var ol = jQuery('<ol></ol>');
+
+	users.forEach(function(user){
+		//add li element to ol element using append
+		ol.append(jQuery('<li></li>').text(user));
+	});
+	//wipe the list and add the new users to the dom using .html instead of append
+	jQuery("#users").html(ol);
+	// console.log('Users List', users);
 });
 
 //hide loader of the page by default
@@ -69,7 +96,6 @@ jQuery('#message-form').on('submit', function (e) { //pass arg e to prevent defu
 
 	var messageTextBox = jQuery('[name=message]');
 	socket.emit('createMessage', {
-		from : 'User',
 		text : messageTextBox.val()
 	}, function () {
 		//callback function in order to fulfill the acknowledgement that is when the message has been delivered
