@@ -60,6 +60,7 @@ io.on('connection', (socket) => {
   	}
   });
 
+//simply remove them from the list when a user leaves the room
   socket.on('disconnect', () => {
     var removed_user = users.removeUser(socket.id);
     if(removed_user){
