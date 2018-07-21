@@ -2,22 +2,91 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
-
+const bcrypt = require('bcrypt');
+ 
 const {generateMessage, generateLocationMessage} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
 const {Users} = require('./utils/users');
 const publicPath = path.join(__dirname, '../public');
+const publicReqPath = path.join(__dirname, '../public/templateLogReg');
+console.log(publicReqPath);
+var bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
 var users = new Users();
-app.use(express.static(publicPath));
+app.use(express.static(publicReqPath));
+var User = require('./models/user');
+var mongoose = require('mongoose');
+var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
+
+//connect to MongoDB
+mongoose.connect('mongodb://localhost/chat-app');
+var db = mongoose.connection;
+
+// parse incoming requests
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+
+//POST route for updating data
+app.post('/', function (req, res, next) {
+  // confirm that user typed same password twice
+  if (req.body.password !== req.body.passwordConf) {
+    var err = new Error('Passwords do not match.');
+    err.status = 400;
+    res.send("passwords dont match");
+    return next(err);
+  }
+
+  if (req.body.email &&
+    req.body.username &&
+    req.body.password &&
+    req.body.passwordConf) {
+
+    var userData = {
+      email: req.body.email,
+      username: req.body.username,
+      password: req.body.password,
+      passwordConf: req.body.passwordConf,
+    }
+
+    User.create(userData, function (error, user) {
+      if (error) {
+        return next(error);
+      } else {
+        console.log(req);
+        req.session.userId = user._id;
+        return res.redirect('/profile');
+      }
+    });
+
+  } else if (req.body.logemail && req.body.logpassword) {
+    User.authenticate(req.body.logemail, req.body.logpassword, function (error, user) {
+      if (error || !user) {
+        var err = new Error('Wrong email or password.');
+        err.status = 401;
+        return next(err);
+      } else {
+        req.session.userId = user._id;
+        return res.redirect('/profile');
+      }
+    });
+  } else {
+    var err = new Error('All fields required.');
+    err.status = 400;
+    return next(err);
+  }
+})
+
 
 io.on('connection', (socket) => {
   console.log('New user connected');
   socket.on('join', (params, callback) => {  //listens for an event emmitted from client side
-  	if(!isRealString(params.name) || !isRealString(params.room)){
+  	
+    if(!isRealString(params.name) || !isRealString(params.room)){
   		callback('Display name and room is required!'); //the string we passed in the callback function is like the first parameter of callback method on the client side
   	}
 

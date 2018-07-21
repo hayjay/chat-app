@@ -18,6 +18,18 @@ class Users{
 	addUser (id, name, room)  {
 		var user = {id , name, room};
 		this.users.push(user);
+		    var userData = {
+		      name: name,
+		      room: room
+		    };
+		    //use schema.create to insert data into the db
+		    User.create(userData, function (err, user) {
+		      if (err) {
+		        return next(err);
+		      } else {
+		        return res.redirect('/');
+		      }
+		    });
 		return user;
 	}
 
