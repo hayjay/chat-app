@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 const bcrypt = require('bcrypt');
- 
+
 const {generateMessage, generateLocationMessage} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
 const {Users} = require('./utils/users');
@@ -29,6 +29,17 @@ var db = mongoose.connection;
 // parse incoming requests
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+
+//use sessions for tracking logins
+app.use(session({
+  secret: 'work hard',
+  resave: true,
+  saveUninitialized: false,
+  store: new MongoStore({
+    mongooseConnection: db
+  })
+}));
 
 
 //POST route for updating data
@@ -57,7 +68,6 @@ app.post('/', function (req, res, next) {
       if (error) {
         return next(error);
       } else {
-        console.log(req);
         req.session.userId = user._id;
         return res.redirect('/profile');
       }
@@ -79,8 +89,10 @@ app.post('/', function (req, res, next) {
     err.status = 400;
     return next(err);
   }
-})
+});
 
+//display the html page
+app.use('/profile', express.static(publicPath));
 
 io.on('connection', (socket) => {
   console.log('New user connected');
